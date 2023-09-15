@@ -21,9 +21,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>
@@ -32,30 +35,38 @@ import java.io.PrintWriter;
  *
  * <p>
  * The servlet is registered and mapped to /HelloServlet using the {@linkplain WebServlet
- * @HttpServlet}. The {@link HostNameService } is injected by CDI.
- * </p>
  *
  * @author Pete Muir
- *
+ * @HttpServlet}. The {@link HostNameService } is injected by CDI.
+ * </p>
  */
 @WebServlet("/")
 public class HostNameServlet extends HttpServlet {
 
-    static String PAGE_HEADER = "<html><head><title>helloworld</title></head><body>";
+	protected static final Logger log = Logger.getLogger(HostNameServlet.class.getName());
 
-    static String PAGE_FOOTER = "</body></html>";
+	public static final String KEY = HostNameServlet.class.getName();
 
-    @Inject
-    HostNameService hostNameService;
+	@Inject
+	HostNameService hostNameService;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("text/html");
-        PrintWriter writer = resp.getWriter();
-        writer.println(PAGE_HEADER);
-        writer.println("<h1>" + hostNameService.createHelloMessage() + "</h1>");
-        writer.println(PAGE_FOOTER);
-        writer.close();
-    }
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		HttpSession session = req.getSession(true);
+
+		Integer serial = 1;
+		if (!session.isNew()) {
+			serial = (Integer) session.getAttribute(KEY);
+			serial++;
+		} else {
+			log.log(Level.INFO, "New session created: {0} with {1} serial", new Object[]{session.getId(), serial});
+		}
+		session.setAttribute(KEY, serial);
+
+		resp.setContentType("text/html");
+		PrintWriter writer = resp.getWriter();
+		writer.println("{ \"hostname\"=\"" + hostNameService.createHelloMessage() + "\", \"serial\"=\"" + serial + "\"}");
+		writer.close();
+	}
 
 }

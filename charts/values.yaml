@@ -1,7 +1,9 @@
 image:
   name: quay.io/tborgato/wildfly-kubernetes-example
+  tag: latest
 build:
   enabled: false # The build part is not needed since we have already built our application with the wildfly-maven-plugin plugin
 deploy:
+  replicas: 3
   route:
     enabled: false # the route can be enabled, but only for OpenShift clusters

@@ -153,6 +153,7 @@
                             <layers>
                                 <!-- layers may be used to customize the server to provision-->
                                 <layer>cloud-server</layer>
+                                <layer>web-clustering</layer>
                             </layers>
                             <!-- deploys the quickstart on root web context -->
                             <runtimeName>ROOT.war</runtimeName>
@@ -188,6 +189,7 @@
                             </feature-packs>
                             <layers>
                                 <layer>cloud-server</layer>
+                                <layer>web-clustering</layer>
                             </layers>
                             <filename>ROOT.war</filename>
                         </configuration>
