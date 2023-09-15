@@ -20,10 +20,10 @@ curl http://localhost:8080/
 mvn clean package wildfly:image -Popenshift
 ```
 
-# push image into remote registry
+## push image into remote registry
 
 ```shell
 podman login quay.io
-podman tag helloworld quay.io/username/helloworld
-podman push quay.io/username/helloworld
+podman tag wildfly-kubernetes-example quay.io/tborgato/wildfly-kubernetes-example
+podman push quay.io/tborgato/wildfly-kubernetes-example
 ```
