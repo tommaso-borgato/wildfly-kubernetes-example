@@ -1,10 +1,17 @@
 # Intro
 
+This repo demonstrates running a clustered [WildFly](https://www.wildfly.org/) application on [Kubernetes - Minikube](https://minikube.sigs.k8s.io/docs/start/) using an [NGINX Ingress Controller](https://docs.nginx.com/nginx-ingress-controller/) to expose the application outside the Kubernetes cluster;
+The [NGINX Ingress Controller](https://docs.nginx.com/nginx-ingress-controller/) is configured to support Sticky Sessions;
+
 An Ingress Controller is a component in a Kubernetes cluster that configures an HTTP load balancer according to Ingress resources created by the cluster user.
 
 Kubernetes uses a "Public Endpoint", which fronts the Ingress Controller pod(s). This is typically a TCP load balancer (cloud, software, or hardware) or a combination of such load balancer with a NodePort service. Clients connect to their applications via the Public Endpoint.
 
-Read [How NGINX Ingress Controller Works](https://docs.nginx.com/nginx-ingress-controller/intro/how-nginx-ingress-controller-works/) for complete description;
+Read the following for a deeper understanding:
+- [How NGINX Ingress Controller Works](https://docs.nginx.com/nginx-ingress-controller/intro/how-nginx-ingress-controller-works/)
+- [Deploy on Kubernetes with Helm](https://www.wildfly.org/news/2023/06/16/deploy-on-kubernetes-with-helm/)
+- [Nginx Ingress Controller in Kubernetes](https://medium.com/avmconsulting-blog/nginx-ingress-controller-in-kubernetes-8eb14f737f7b)
+- [Session Affinity Using Nginx Ingress Controller: Kubernetes](https://medium.com/@ngbit95/session-affinity-using-nginx-ingress-controller-kubernetes-e39065e01a67)
 
 # install Nginx ingress controller on minikube 
 
