@@ -287,7 +287,7 @@ curl $(minikube service example-app-http --url -n tborgato)
 ## expose the service using an Ingress
 
 ```shell
-kubectl apply -f ingress/example-app-ingress.yaml
+kubectl apply -f ingress/example-app-ingress.yaml -n tborgato
 
 echo "$(minikube ip) example-app.info" | sudo tee -a /etc/hosts
 

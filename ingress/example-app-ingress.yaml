@@ -5,7 +5,10 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     # e.g. Cookie JSESSIONID=8e5IWiIo4u9m6BfXZcylXdqRXx3BQvykFlrewc_w.le-app-869f98dd87-t4hhf
-    nginx.com/sticky-cookie-services: JSESSIONID
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "JSESSIONID"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
 spec:
   # kubectl get ingressclass/nginx -o=jsonpath='{.metadata.name}'
   ingressClassName: nginx
