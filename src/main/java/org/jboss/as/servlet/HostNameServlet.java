@@ -65,7 +65,7 @@ public class HostNameServlet extends HttpServlet {
 
 		resp.setContentType("text/html");
 		PrintWriter writer = resp.getWriter();
-		writer.println("{ \"hostname\"=\"" + hostNameService.createHelloMessage() + "\", \"serial\"=\"" + serial + "\"}");
+		writer.println("{ \"hostname\"=\"" + hostNameService.getHostname() + "\", \"serial\"=\"" + serial + "\"}");
 		writer.close();
 	}
 

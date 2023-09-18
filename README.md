@@ -1,6 +1,6 @@
 # Intro
 
-This repo demonstrates running a clustered [WildFly](https://www.wildfly.org/) application on [Kubernetes - Minikube](https://minikube.sigs.k8s.io/docs/start/) using an [NGINX Ingress Controller](https://docs.nginx.com/nginx-ingress-controller/) to expose the application outside the Kubernetes cluster;
+This repo demonstrates running a [WildFly](https://www.wildfly.org/) application on [Kubernetes - Minikube](https://minikube.sigs.k8s.io/docs/start/) using an [NGINX Ingress Controller](https://docs.nginx.com/nginx-ingress-controller/) to expose the application outside the Kubernetes cluster;
 The [NGINX Ingress Controller](https://docs.nginx.com/nginx-ingress-controller/) is configured to support Sticky Sessions;
 
 An Ingress Controller is a component in a Kubernetes cluster that configures an HTTP load balancer according to Ingress resources created by the cluster user.
@@ -12,6 +12,7 @@ Read the following for a deeper understanding:
 - [Deploy on Kubernetes with Helm](https://www.wildfly.org/news/2023/06/16/deploy-on-kubernetes-with-helm/)
 - [Nginx Ingress Controller in Kubernetes](https://medium.com/avmconsulting-blog/nginx-ingress-controller-in-kubernetes-8eb14f737f7b)
 - [Session Affinity Using Nginx Ingress Controller: Kubernetes](https://medium.com/@ngbit95/session-affinity-using-nginx-ingress-controller-kubernetes-e39065e01a67)
+- https://github.com/wildfly/quickstart/tree/main/helloworld: this example builds on this wildfly quickstart and adds clustering
 
 # install Nginx ingress controller on minikube 
 
@@ -249,7 +250,7 @@ run the non containerized server locally:
 ```
 
 ```shell
-curl http://localhost:8080/
+curl -c /tmp/cookies.txt -b /tmp/cookies.txt http://localhost:8080/
 ```
 
 # create image to run on kubernetes
@@ -262,18 +263,19 @@ mvn clean package wildfly:image -Popenshift
 
 ```shell
 podman login quay.io
-podman tag wildfly-kubernetes-example:latest quay.io/tborgato/wildfly-kubernetes-example:latest
-podman push quay.io/tborgato/wildfly-kubernetes-example:latest
+podman tag wildfly-kubernetes-example:latest quay.io/<YOUR_QUAY_USER>/wildfly-kubernetes-example:latest
+podman push quay.io/<YOUR_QUAY_USER>/wildfly-kubernetes-example:latest
 ```
 
 ## install on kubernetes using helm
 
 ```shell
-kubectl create namespace tborgato
-kubectl config set-context --current --namespace=tborgato
+kubectl create namespace <YOUR_NAMESPACE>
+kubectl config set-context --current --namespace=<YOUR_NAMESPACE>
 
 helm repo add wildfly https://docs.wildfly.org/wildfly-charts/
 
+# IMPORTANT: replace "<YOUR_QUAY_USER>" in "charts/values.yaml" with your Quay.io user
 helm install example-app wildfly/wildfly -f charts/values.yaml
 ```
 
@@ -285,22 +287,60 @@ helm upgrade example-app wildfly/wildfly -f charts/values.yaml
 
 ## expose the service using an NodePort service
 
+This is just for checking that your service is running:
+
 ```shell
 kubectl expose deployment example-app --type=NodePort --port=8080 --name=example-app-http
 
-curl $(minikube service example-app-http --url -n tborgato)
+curl -c /tmp/cookies.txt -b /tmp/cookies.txt $(minikube service example-app-http --url -n <YOUR_NAMESPACE>)
 ```
 
 ## expose the service using an Ingress
 
+This is the interesting part where we expose the service with an `Ingress` which is managed by the NGINX Ingress Controller: 
+
 ```shell
-kubectl apply -f ingress/example-app-ingress.yaml -n tborgato
+kubectl apply -f ingress/example-app-ingress.yaml -n <YOUR_NAMESPACE>
 
 echo "$(minikube ip) example-app.info" | sudo tee -a /etc/hosts
 
 # http
-curl http://example-app.info
+curl -c /tmp/cookies.txt -b /tmp/cookies.txt http://example-app.info
 
 # https
-curl -k https://example-app.info
+curl -k -c /tmp/cookies.txt -b /tmp/cookies.txt https://example-app.info
+```
+
+Hit the `https://example-app.info` URL a few times: you will see `hostname` never changes (sticky sessions is working!) while `serial` is incremented at each invocation (this is proof out invocations are always tied to the same WildFly session):
+
+```shell
+$ curl -c /tmp/cookies.txt -b /tmp/cookies.txt http://example-app.info
+{ "hostname"="example-app-869f98dd87-t4hhf", "serial"="1"}
+$ curl -c /tmp/cookies.txt -b /tmp/cookies.txt http://example-app.info
+{ "hostname"="example-app-869f98dd87-t4hhf", "serial"="2"}
+$ curl -c /tmp/cookies.txt -b /tmp/cookies.txt http://example-app.info
+{ "hostname"="example-app-869f98dd87-t4hhf", "serial"="3"}
+$ curl -c /tmp/cookies.txt -b /tmp/cookies.txt http://example-app.info
+{ "hostname"="example-app-869f98dd87-t4hhf", "serial"="4"}
+```
+
+In facts, you configured 3 replicas for your deployment but, because of sticky sessions, your invocations always go to the same Pod (the third in the following list):
+
+```shell
+$ kubectl get pods -n <YOUR_NAMESPACE>
+NAME                           READY   STATUS    RESTARTS        AGE
+example-app-869f98dd87-77c7q   1/1     Running   2 (2d16h ago)   2d17h
+example-app-869f98dd87-9hmmg   1/1     Running   2 (2d16h ago)   2d17h
+example-app-869f98dd87-t4hhf   1/1     Running   2 (2d16h ago)   2d17h
+```
+
+If you remove cookies handling from `curl`, you will see that hostname changes because some load balancing algorithm, other than sticky sessions, is doing its job:
+
+```shell
+$ curl http://example-app.info
+{ "hostname"="example-app-869f98dd87-9hmmg", "serial"="1"}
+$ curl http://example-app.info
+{ "hostname"="example-app-869f98dd87-77c7q", "serial"="1"}
+$ curl http://example-app.info
+{ "hostname"="example-app-869f98dd87-t4hhf", "serial"="1"}
 ```

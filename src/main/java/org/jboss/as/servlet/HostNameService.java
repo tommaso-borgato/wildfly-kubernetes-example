@@ -27,8 +27,8 @@ import java.net.UnknownHostException;
  */
 public class HostNameService {
 
-    String createHelloMessage() throws UnknownHostException {
-        return "Hello from " + InetAddress.getLocalHost().getHostName() + "!";
+    String getHostname() throws UnknownHostException {
+        return InetAddress.getLocalHost().getHostName();
     }
 
 }

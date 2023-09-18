@@ -1,5 +1,5 @@
 image:
-  name: quay.io/tborgato/wildfly-kubernetes-example
+  name: quay.io/<YOUR_QUAY_USER>/wildfly-kubernetes-example
   tag: latest
 build:
   enabled: false # The build part is not needed since we have already built our application with the wildfly-maven-plugin plugin
